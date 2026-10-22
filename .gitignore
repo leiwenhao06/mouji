@@ -1,0 +1,45 @@
+# ===== 构建产物 =====
+target/
+*.class
+*.jar
+*.war
+frontend/dist/
+frontend/.vite/
+node_modules/
+
+# ===== 运行数据（模拟影像、上传文件、日志） =====
+data/
+logs/
+runtime/
+*.log
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+ocr_service/.venv/
+*.egg-info/
+
+# ===== 本地配置与密钥（严禁提交） =====
+.env
+.env.*
+*.local.yml
+*.local.properties
+config/application-local.yml
+config/application-local.properties
+
+# ===== IDE / 系统 =====
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.claude/
+.DS_Store
+Thumbs.db
+
+# ===== 临时文件 =====
+.tmp/
+*.tmp
+*.bak

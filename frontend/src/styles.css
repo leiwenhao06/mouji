@@ -1,0 +1,108 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: #f5f7fa;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+.login-wrap {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 20% 20%, #e8f2ff 0, #f5f7fa 45%, #eef7f4 100%);
+}
+
+.login-card {
+  width: 380px;
+  padding: 8px 4px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px 10px;
+  color: #0f2f57;
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: 1px;
+}
+
+.brand-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1677ff, #36cfc9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 17px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #102a43;
+  margin: 0;
+}
+
+.page-subtitle {
+  color: #7a8ba0;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.stat-card .ant-card-body {
+  padding: 20px;
+}
+
+.stat-value {
+  font-size: 30px;
+  font-weight: 700;
+  color: #102a43;
+  line-height: 1.2;
+}
+
+.stat-label {
+  color: #7a8ba0;
+  font-size: 13px;
+}
+
+.stat-alert .stat-value {
+  color: #d4380d;
+}
+
+.chart-card {
+  height: 100%;
+}
+
+.advice-block h3 {
+  margin: 18px 0 8px;
+  font-size: 15px;
+  color: #102a43;
+}
+
+.advice-list li {
+  margin-bottom: 6px;
+  color: #334e68;
+}
+
+.soft-card {
+  border: 1px solid #e8eef5;
+  box-shadow: 0 1px 2px rgba(16, 42, 67, 0.04);
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}

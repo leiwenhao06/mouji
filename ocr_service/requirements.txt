@@ -1,0 +1,6 @@
+rapidocr>=2.0
+onnxruntime>=1.19
+flask>=3.0
+numpy
+opencv-python-headless
+pillow
