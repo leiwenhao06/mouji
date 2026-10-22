@@ -39,7 +39,10 @@ http.interceptors.response.use(
       return Promise.reject(error)
     }
     const msg = error.response?.data?.message || error.message || '网络错误'
-    message.error(msg)
+    // silent 请求（如"尚未设置头像"的 404）不弹全局提示
+    if (!(error.config as any)?.silent) {
+      message.error(msg)
+    }
     return Promise.reject(error)
   },
 )

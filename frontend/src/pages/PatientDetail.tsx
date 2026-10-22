@@ -159,31 +159,74 @@ export default function PatientDetail() {
   ]
 
   const latest = useMemo(() => (exams.length ? exams[exams.length - 1] : undefined), [exams])
+  const previous = useMemo(() => {
+    if (!latest) return undefined
+    return [...exams]
+      .reverse()
+      .find((e) => e.examId !== latest.examId && e.eyeSide === latest.eyeSide && e.topography)
+  }, [exams, latest])
+
+  const kmax = latest?.topography?.frontKmax
+  const kmaxDelta =
+    kmax != null && previous?.topography?.frontKmax != null
+      ? Number(kmax) - Number(previous.topography.frontKmax)
+      : undefined
+  const thin = latest?.topography?.thinnestPachy
+  const thinDelta =
+    thin != null && previous?.topography?.thinnestPachy != null
+      ? Number(thin) - Number(previous.topography.thinnestPachy)
+      : undefined
   const overdue = plan?.status === 'OVERDUE'
+
+  const kmaxDeltaText =
+    kmaxDelta == null
+      ? previous
+        ? '暂无可比数据'
+        : '首次检查'
+      : `较上次 ${kmaxDelta > 0 ? '+' : ''}${kmaxDelta.toFixed(2)} D`
+  const kmaxDeltaClass =
+    kmaxDelta == null ? 'flat' : kmaxDelta > 0.05 ? 'up' : kmaxDelta < -0.05 ? 'down' : 'flat'
+  const thinDeltaText =
+    thinDelta == null
+      ? previous
+        ? '暂无可比数据'
+        : '首次检查'
+      : `较上次 ${thinDelta > 0 ? '+' : ''}${thinDelta.toFixed(0)} μm`
+  // 厚度下降代表病情进展，用红色提示
+  const thinDeltaClass =
+    thinDelta == null ? 'flat' : thinDelta < -1 ? 'up' : thinDelta > 1 ? 'down' : 'flat'
 
   return (
     <div>
-      <div className="page-header">
-        <Space align="center">
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/patients')}>
-            返回
-          </Button>
-          <div>
-            <h2 className="page-title">{patient?.name || '患者台账'}</h2>
-            <div className="page-subtitle">
-              {patient?.gender === 'Male' ? '男' : patient?.gender === 'Female' ? '女' : '性别未填'}
-              {patient?.age != null ? ` · ${patient.age} 岁` : ''}
-              {patient?.dateOfBirth ? ` · 出生于 ${patient.dateOfBirth}` : ''}
-            </div>
+      <div className="page-header" style={{ marginBottom: 12 }}>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/patients')}>
+          返回患者台账
+        </Button>
+      </div>
+
+      <Card className="soft-card patient-hero" bordered={false} loading={loading} style={{ marginBottom: 16 }}>
+        <div className="patient-big-avatar">{(patient?.name || '患').slice(0, 1)}</div>
+        <div className="patient-hero-main">
+          <div className="patient-hero-name">{patient?.name || '患者'}</div>
+          <Space size={6} wrap>
+            <Tag>{patient?.gender === 'Male' ? '男' : patient?.gender === 'Female' ? '女' : '性别未填'}</Tag>
+            {patient?.age != null && <Tag>{patient.age} 岁</Tag>}
+            {latest && <StageTag value={latest.stageCode} />}
+            {latest && <RiskTag value={latest.riskFlag} />}
+            {patient?.medicalHistory && <Tag color="default">既往史：{patient.medicalHistory}</Tag>}
+          </Space>
+          <div className="patient-hero-meta">
+            患者ID <span className="mono">{patientId}</span> · 联系电话 {patient?.contact || '未填写'} · 检查{' '}
+            {exams.length} 次 · 最近检查 {latest?.examDate || '-'}
           </div>
-        </Space>
-        <Space>
+        </div>
+        <div className="patient-hero-actions">
           <Button onClick={() => navigate(`/suggestions?patientId=${patientId}`)}>生成 AI 随访建议</Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>
             录入检查
           </Button>
-        </Space>
-      </div>
+        </div>
+      </Card>
 
       {overdue && (
         <Alert
@@ -196,24 +239,6 @@ export default function PatientDetail() {
       )}
 
       <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col span={16}>
-          <Card className="soft-card" bordered={false} loading={loading}>
-            <Descriptions column={4} size="small">
-              <Descriptions.Item label="患者ID">
-                <span className="mono" style={{ fontSize: 12 }}>{patientId}</span>
-              </Descriptions.Item>
-              <Descriptions.Item label="联系电话">{patient?.contact || '-'}</Descriptions.Item>
-              <Descriptions.Item label="检查次数">{exams.length}</Descriptions.Item>
-              <Descriptions.Item label="最近检查">{latest?.examDate || '-'}</Descriptions.Item>
-            </Descriptions>
-            {patient?.medicalHistory && (
-              <div style={{ marginTop: 8, color: '#52606d' }}>
-                <Tag>既往史</Tag>
-                {patient.medicalHistory}
-              </div>
-            )}
-          </Card>
-        </Col>
         <Col span={8}>
           <Card
             className="soft-card"
@@ -221,9 +246,10 @@ export default function PatientDetail() {
             loading={loading}
             title="当前随访计划"
             extra={<PlanStatusTag value={plan?.status} />}
+            style={{ height: '100%' }}
           >
             {plan ? (
-              <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              <Space direction="vertical" size={6} style={{ width: '100%' }}>
                 <div>
                   建议频率：<strong>每 {plan.frequencyMonths} 个月</strong>
                 </div>
@@ -237,6 +263,26 @@ export default function PatientDetail() {
             ) : (
               <Empty description="暂无随访计划" image={Empty.PRESENTED_IMAGE_SIMPLE} />
             )}
+          </Card>
+        </Col>
+        <Col span={8}>
+          <Card className="soft-card metric-card" bordered={false} loading={loading} style={{ height: '100%' }}>
+            <div className="metric-title">最新 KMax（{latest?.eyeSide === 'left' ? '左眼' : '右眼'}）</div>
+            <div className="metric-value">
+              {kmax != null ? Number(kmax).toFixed(2) : '-'}
+              <span className="metric-unit">D</span>
+            </div>
+            <div className={`metric-delta ${kmaxDeltaClass}`}>{kmaxDeltaText}</div>
+          </Card>
+        </Col>
+        <Col span={8}>
+          <Card className="soft-card metric-card" bordered={false} loading={loading} style={{ height: '100%' }}>
+            <div className="metric-title">最新最薄点厚度（{latest?.eyeSide === 'left' ? '左眼' : '右眼'}）</div>
+            <div className="metric-value">
+              {thin != null ? Number(thin).toFixed(0) : '-'}
+              <span className="metric-unit">μm</span>
+            </div>
+            <div className={`metric-delta ${thinDeltaClass}`}>{thinDeltaText}</div>
           </Card>
         </Col>
       </Row>

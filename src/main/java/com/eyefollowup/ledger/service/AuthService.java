@@ -46,6 +46,7 @@ public class AuthService {
         }
         String token = jwtUtil.generate(user.getUsername(), user.getRole());
         return new LoginResponse(token, user.getUsername(),
-                user.getDisplayName() == null ? user.getUsername() : user.getDisplayName(), user.getRole());
+                user.getDisplayName() == null ? user.getUsername() : user.getDisplayName(),
+                user.getAvatarPath(), user.getRole());
     }
 }

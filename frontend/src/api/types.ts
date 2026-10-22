@@ -1,3 +1,10 @@
+export interface Account {
+  username: string
+  displayName?: string
+  role: string
+  avatarPath?: string
+}
+
 export interface Patient {
   patientId: string
   name: string

@@ -31,6 +31,7 @@ app:
     password: ${ADMIN_PASSWORD:Admin@2026}
   storage:
     image-dir: ${IMAGE_DIR:./data/images}
+    avatar-dir: ${AVATAR_DIR:./data/avatars}
   ocr:
     url: ${OCR_URL:http://127.0.0.1:8001}
     timeout-ms: 120000

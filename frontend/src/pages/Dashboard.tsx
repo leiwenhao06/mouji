@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button, Card, Col, Row, Statistic, Table, Tag } from 'antd'
+import { Button, Card, Col, Row, Table, Tag } from 'antd'
 import { ReloadOutlined, TeamOutlined, FileDoneOutlined, WarningOutlined, RiseOutlined } from '@ant-design/icons'
 import ReactECharts from 'echarts-for-react'
 import http from '../api/client'
@@ -101,39 +101,51 @@ export default function Dashboard() {
 
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={6}>
-          <Card className="soft-card stat-card" bordered={false}>
-            <Statistic
-              title="在管患者"
-              value={summary.totalPatients || 0}
-              prefix={<TeamOutlined style={{ color: '#1677ff' }} />}
-            />
+          <Card className="soft-card stat-tile" bordered={false}>
+            <div className="stat-icon" style={{ background: '#eaf2ff', color: '#1677ff' }}>
+              <TeamOutlined />
+            </div>
+            <div>
+              <div className="stat-label">在管患者</div>
+              <div className="stat-value">{summary.totalPatients || 0}</div>
+            </div>
           </Card>
         </Col>
         <Col span={6}>
-          <Card className="soft-card stat-card" bordered={false}>
-            <Statistic
-              title="本月检查"
-              value={summary.examsThisMonth || 0}
-              prefix={<FileDoneOutlined style={{ color: '#13c2c2' }} />}
-            />
+          <Card className="soft-card stat-tile" bordered={false}>
+            <div className="stat-icon" style={{ background: '#e6fffb', color: '#13c2c2' }}>
+              <FileDoneOutlined />
+            </div>
+            <div>
+              <div className="stat-label">本月检查</div>
+              <div className="stat-value">{summary.examsThisMonth || 0}</div>
+            </div>
           </Card>
         </Col>
         <Col span={6}>
-          <Card className="soft-card stat-card stat-alert" bordered={false}>
-            <Statistic
-              title="逾期随访"
-              value={summary.overduePlans || 0}
-              prefix={<WarningOutlined style={{ color: '#cf1322' }} />}
-            />
+          <Card className="soft-card stat-tile" bordered={false}>
+            <div className="stat-icon" style={{ background: '#fff1f0', color: '#cf1322' }}>
+              <WarningOutlined />
+            </div>
+            <div>
+              <div className="stat-label">逾期随访</div>
+              <div className="stat-value" style={{ color: '#cf1322' }}>
+                {summary.overduePlans || 0}
+              </div>
+            </div>
           </Card>
         </Col>
         <Col span={6}>
-          <Card className="soft-card stat-card" bordered={false}>
-            <Statistic
-              title="进展风险患者"
-              value={summary.progressionPatients || 0}
-              prefix={<RiseOutlined style={{ color: '#fa8c16' }} />}
-            />
+          <Card className="soft-card stat-tile" bordered={false}>
+            <div className="stat-icon" style={{ background: '#fff7e6', color: '#fa8c16' }}>
+              <RiseOutlined />
+            </div>
+            <div>
+              <div className="stat-label">进展风险患者</div>
+              <div className="stat-value" style={{ color: '#d46b08' }}>
+                {summary.progressionPatients || 0}
+              </div>
+            </div>
           </Card>
         </Col>
       </Row>

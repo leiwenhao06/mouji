@@ -13,6 +13,7 @@ public class User {
     private String username;
     private String passwordHash;
     private String displayName;
+    private String avatarPath;
     private String role;
     private String token;
     private LocalDateTime createdAt;

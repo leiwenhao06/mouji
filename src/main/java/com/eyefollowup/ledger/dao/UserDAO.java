@@ -24,6 +24,7 @@ public class UserDAO {
         u.setUsername(rs.getString("username"));
         u.setPasswordHash(rs.getString("password_hash"));
         u.setDisplayName(rs.getString("display_name"));
+        u.setAvatarPath(rs.getString("avatar_path"));
         u.setRole(rs.getString("role"));
         u.setToken(rs.getString("token"));
         Timestamp t = rs.getTimestamp("created_at");
@@ -52,5 +53,13 @@ public class UserDAO {
 
     public void updatePassword(int id, String passwordHash) {
         jdbc.update("UPDATE users SET password_hash=? WHERE id=?", passwordHash, id);
+    }
+
+    public void updateDisplayName(String username, String displayName) {
+        jdbc.update("UPDATE users SET display_name=? WHERE username=?", displayName, username);
+    }
+
+    public void updateAvatar(String username, String avatarPath) {
+        jdbc.update("UPDATE users SET avatar_path=? WHERE username=?", avatarPath, username);
     }
 }
