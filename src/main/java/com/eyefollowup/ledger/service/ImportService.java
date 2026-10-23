@@ -165,6 +165,9 @@ public class ImportService {
             }
         }
 
+        // OCR 提取的全量字段作为底稿，用户在预览页确认/修改的值覆盖其上，
+        // 避免只入库表单展示的少数指标、丢失后表面参数与眼前节数据。
+        Map<String, Object> ocrFlat = storedOcrFields(image.getOcrJson());
         ExamRequest examRequest = new ExamRequest();
         examRequest.setPatientId(patient.getPatientId());
         examRequest.setExamDate(req.getExamDate() == null ? LocalDate.now() : req.getExamDate());
@@ -172,8 +175,8 @@ public class ImportService {
         examRequest.setEyeSide(req.getEyeSide() == null ? "right" : req.getEyeSide());
         examRequest.setExamType(req.getExamType() == null ? "Pentacam" : req.getExamType());
         examRequest.setNotes(req.getNotes() == null ? "报告导入" : req.getNotes());
-        examRequest.setTopography(req.getTopography());
-        examRequest.setBiomechanics(req.getBiomechanics());
+        examRequest.setTopography(mergeTopography(ocrFlat, req.getTopography()));
+        examRequest.setBiomechanics(mergeBiomechanics(ocrFlat, req.getBiomechanics()));
 
         FollowupExam exam = examService.create(examRequest);
 
@@ -257,6 +260,67 @@ public class ImportService {
         b.setArth(bd(f, "arth"));
         b.setDaRatio(bd(f, "da_ratio"));
         b.setSsi(bd(f, "ssi"));
+        return b;
+    }
+
+    /** 解析入库图片上保存的 OCR 原始结果，取出扁平字段（上传时已存全量 OCR JSON）。 */
+    private Map<String, Object> storedOcrFields(String ocrJson) {
+        if (ocrJson == null || ocrJson.isBlank()) {
+            return Map.of();
+        }
+        try {
+            JsonNode root = mapper.readTree(ocrJson);
+            JsonNode fields = root.has("fields") ? root.get("fields") : root;
+            return flatten(fields);
+        } catch (Exception e) {
+            log.warn("OCR JSON 解析失败，仅使用用户确认值: {}", e.getMessage());
+            return Map.of();
+        }
+    }
+
+    /** OCR 底稿 + 用户确认值合并：用户非空值优先。 */
+    private CornealTopography mergeTopography(Map<String, Object> ocrFlat, CornealTopography override) {
+        CornealTopography t = mapTopography(ocrFlat);
+        if (override == null) {
+            return t;
+        }
+        if (override.getFrontK1() != null) t.setFrontK1(override.getFrontK1());
+        if (override.getFrontK2() != null) t.setFrontK2(override.getFrontK2());
+        if (override.getFrontKm() != null) t.setFrontKm(override.getFrontKm());
+        if (override.getFrontKmax() != null) t.setFrontKmax(override.getFrontKmax());
+        if (override.getFrontRmin() != null) t.setFrontRmin(override.getFrontRmin());
+        if (override.getFrontQVal() != null) t.setFrontQVal(override.getFrontQVal());
+        if (override.getFrontAxis() != null) t.setFrontAxis(override.getFrontAxis());
+        if (override.getFrontAstig() != null) t.setFrontAstig(override.getFrontAstig());
+        if (override.getFrontQs() != null) t.setFrontQs(override.getFrontQs());
+        if (override.getBackK1() != null) t.setBackK1(override.getBackK1());
+        if (override.getBackK2() != null) t.setBackK2(override.getBackK2());
+        if (override.getBackKm() != null) t.setBackKm(override.getBackKm());
+        if (override.getBackRmin() != null) t.setBackRmin(override.getBackRmin());
+        if (override.getBackQVal() != null) t.setBackQVal(override.getBackQVal());
+        if (override.getBackQs() != null) t.setBackQs(override.getBackQs());
+        if (override.getPupilCenterPachy() != null) t.setPupilCenterPachy(override.getPupilCenterPachy());
+        if (override.getPachyApex() != null) t.setPachyApex(override.getPachyApex());
+        if (override.getThinnestPachy() != null) t.setThinnestPachy(override.getThinnestPachy());
+        if (override.getCorneaVolume() != null) t.setCorneaVolume(override.getCorneaVolume());
+        if (override.getAcDepth() != null) t.setAcDepth(override.getAcDepth());
+        if (override.getIop() != null) t.setIop(override.getIop());
+        return t;
+    }
+
+    private BiomechanicalParams mergeBiomechanics(Map<String, Object> ocrFlat, BiomechanicalParams override) {
+        BiomechanicalParams b = mapBiomechanics(ocrFlat);
+        if (override == null) {
+            return b;
+        }
+        if (override.getCcbi() != null) b.setCcbi(override.getCcbi());
+        if (override.getCtbi() != null) b.setCtbi(override.getCtbi());
+        if (override.getIsValue() != null) b.setIsValue(override.getIsValue());
+        if (override.getSpA1() != null) b.setSpA1(override.getSpA1());
+        if (override.getIntegrRadius() != null) b.setIntegrRadius(override.getIntegrRadius());
+        if (override.getArth() != null) b.setArth(override.getArth());
+        if (override.getDaRatio() != null) b.setDaRatio(override.getDaRatio());
+        if (override.getSsi() != null) b.setSsi(override.getSsi());
         return b;
     }
 
