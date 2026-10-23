@@ -20,6 +20,8 @@
 | 随访计划 | 按分期/进展自动生成复查频率，逾期患者置顶提醒 |
 | AI 随访建议 | 脱敏上下文 → 本地知识检索 → 循证草稿 → 大模型个体化（可选）→ 指南一致性守卫 |
 | 数据看板 | 分期分布、风险分布、月度检查量、逾期名单、进展风险名单 |
+| 台账导出 | 全员汇总 CSV、单患者检查明细 CSV（UTF-8 BOM，Excel 直接打开） |
+| 个人中心 | 昵称、头像（魔数校验防伪装上传）、修改密码（强度校验） |
 | 安全与审计 | JWT 登录、接口鉴权、操作审计、报告图片需登录访问 |
 
 ## 2. 技术架构
@@ -153,6 +155,11 @@ mouji/
 | POST | `/api/followup/suggestions` | 提交 AI 建议任务 |
 | GET | `/api/followup/suggestions/{requestId}` | 轮询任务结果 |
 | GET | `/api/dashboard/overview` | 看板聚合数据 |
+| GET | `/api/export/patients` | 导出全员汇总台账（CSV） |
+| GET | `/api/export/patients/{id}/ledger` | 导出单患者检查明细（CSV） |
+| GET/PUT | `/api/account` `/api/account/profile` | 个人资料查询 / 昵称修改 |
+| POST/GET | `/api/account/avatar` | 头像上传 / 获取 |
+| PUT | `/api/account/password` | 修改密码（校验旧密码与强度） |
 
 ## 8. 数据与合规声明
 

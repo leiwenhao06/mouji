@@ -16,6 +16,9 @@ http.interceptors.request.use((config) => {
 
 http.interceptors.response.use(
   (response) => {
+    if ((response.config as any).raw) {
+      return response
+    }
     if (response.config.responseType === 'blob') {
       return response.data
     }
@@ -46,5 +49,27 @@ http.interceptors.response.use(
     return Promise.reject(error)
   },
 )
+
+/** 下载附件（CSV 等）：从 Content-Disposition 取文件名并触发浏览器保存。 */
+export async function downloadFile(path: string, fallbackName: string) {
+  const res: any = await http.get(path, { responseType: 'blob', raw: true } as any)
+  const disposition: string = res.headers?.['content-disposition'] || ''
+  let filename = fallbackName
+  const star = /filename\*=UTF-8''([^;]+)/i.exec(disposition)
+  const plain = /filename="?([^";]+)"?/i.exec(disposition)
+  if (star) {
+    filename = decodeURIComponent(star[1])
+  } else if (plain) {
+    filename = plain[1]
+  }
+  const url = URL.createObjectURL(res.data)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
 
 export default http

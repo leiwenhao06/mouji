@@ -12,10 +12,10 @@ import {
   Tag,
   message,
 } from 'antd'
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
+import { DownloadOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
-import http from '../api/client'
+import http, { downloadFile } from '../api/client'
 import { Patient } from '../api/types'
 
 export default function Patients() {
@@ -27,8 +27,19 @@ export default function Patients() {
   const [keyword, setKeyword] = useState('')
   const [gender, setGender] = useState<string>()
   const [loading, setLoading] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [open, setOpen] = useState(false)
   const [form] = Form.useForm()
+
+  const exportSummary = async () => {
+    setExporting(true)
+    try {
+      await downloadFile('/export/patients', '随访台账汇总.csv')
+      message.success('汇总台账已导出')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const load = async (p = page, s = size, kw = keyword, g = gender) => {
     setLoading(true)
@@ -127,6 +138,9 @@ export default function Patients() {
           />
           <Button icon={<ReloadOutlined />} onClick={() => load()}>
             刷新
+          </Button>
+          <Button icon={<DownloadOutlined />} loading={exporting} onClick={exportSummary}>
+            导出汇总
           </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>
             新建患者

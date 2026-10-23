@@ -29,6 +29,13 @@ public class AccountController {
         return ApiResponse.ok(accountService.updateDisplayName(username, body.get("displayName")));
     }
 
+    @PutMapping("/password")
+    public ApiResponse<Void> changePassword(@RequestAttribute("username") String username,
+                                            @RequestBody Map<String, String> body) {
+        accountService.changePassword(username, body.get("oldPassword"), body.get("newPassword"));
+        return ApiResponse.ok(null);
+    }
+
     @PostMapping("/avatar")
     public ApiResponse<Map<String, Object>> uploadAvatar(@RequestAttribute("username") String username,
                                                          @RequestParam("file") MultipartFile file) {

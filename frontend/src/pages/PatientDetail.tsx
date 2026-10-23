@@ -19,11 +19,11 @@ import {
   Tag,
   message,
 } from 'antd'
-import { ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, DownloadOutlined, PlusOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import ReactECharts from 'echarts-for-react'
-import http from '../api/client'
+import http, { downloadFile } from '../api/client'
 import { Exam, FollowupPlan, Patient } from '../api/types'
 import { PlanStatusTag, RiskTag, StageTag, eyeLabel } from '../components/StatusTag'
 import AuthImage from '../components/AuthImage'
@@ -221,6 +221,15 @@ export default function PatientDetail() {
           </div>
         </div>
         <div className="patient-hero-actions">
+          <Button
+            icon={<DownloadOutlined />}
+            onClick={async () => {
+              await downloadFile(`/export/patients/${patientId}/ledger`, '随访台账.csv')
+              message.success('检查台账已导出')
+            }}
+          >
+            导出台账
+          </Button>
           <Button onClick={() => navigate(`/suggestions?patientId=${patientId}`)}>生成 AI 随访建议</Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>
             录入检查

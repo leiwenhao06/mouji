@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Button, Form, Input, Modal, Tag, Upload, message } from 'antd'
-import { CameraOutlined } from '@ant-design/icons'
+import { Button, Divider, Form, Input, Modal, Tag, Upload, message } from 'antd'
+import { CameraOutlined, LockOutlined } from '@ant-design/icons'
 import http from '../api/client'
 import { Account } from '../api/types'
 import UserAvatar from './UserAvatar'
 
 /**
- * 个人资料编辑：昵称 + 头像。
+ * 个人资料编辑：昵称 + 头像 + 修改密码。
  */
 export default function ProfileModal({
   open,
@@ -20,9 +20,11 @@ export default function ProfileModal({
   onUpdated: (account: Account) => void
 }) {
   const [form] = Form.useForm()
+  const [pwdForm] = Form.useForm()
   const [version, setVersion] = useState(0)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [pwdSaving, setPwdSaving] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -41,6 +43,23 @@ export default function ProfileModal({
       onClose()
     } finally {
       setSaving(false)
+    }
+  }
+
+  const changePassword = async () => {
+    const values = await pwdForm.validateFields()
+    setPwdSaving(true)
+    try {
+      await http.put('/account/password', {
+        oldPassword: values.oldPassword,
+        newPassword: values.newPassword,
+      })
+      message.success('密码已修改，下次登录请使用新密码')
+      pwdForm.resetFields()
+    } catch {
+      // 失败提示已由 axios 拦截器统一弹出
+    } finally {
+      setPwdSaving(false)
     }
   }
 
@@ -115,6 +134,51 @@ export default function ProfileModal({
         >
           <Input placeholder="显示在工作台与看板中的名称" maxLength={50} showCount />
         </Form.Item>
+      </Form>
+
+      <Divider plain style={{ margin: '6px 0 14px', color: '#7a8ba0', fontSize: 13 }}>
+        <LockOutlined /> 修改密码
+      </Divider>
+      <Form form={pwdForm} layout="vertical">
+        <Form.Item
+          name="oldPassword"
+          label="原密码"
+          rules={[{ required: true, message: '请输入原密码' }]}
+        >
+          <Input.Password placeholder="当前使用的密码" autoComplete="current-password" />
+        </Form.Item>
+        <Form.Item
+          name="newPassword"
+          label="新密码"
+          rules={[
+            { required: true, message: '请输入新密码' },
+            {
+              pattern: /^(?=.*[A-Za-z])(?=.*\d).{8,64}$/,
+              message: '8-64 位，需同时包含字母和数字',
+            },
+          ]}
+        >
+          <Input.Password placeholder="8-64 位，包含字母和数字" autoComplete="new-password" />
+        </Form.Item>
+        <Form.Item
+          name="confirm"
+          label="确认新密码"
+          dependencies={['newPassword']}
+          rules={[
+            { required: true, message: '请再次输入新密码' },
+            ({ getFieldValue }) => ({
+              validator: (_, v) =>
+                !v || v === getFieldValue('newPassword')
+                  ? Promise.resolve()
+                  : Promise.reject(new Error('两次输入的密码不一致')),
+            }),
+          ]}
+        >
+          <Input.Password placeholder="再次输入新密码" autoComplete="new-password" />
+        </Form.Item>
+        <Button block loading={pwdSaving} onClick={changePassword} style={{ marginBottom: 4 }}>
+          修改密码
+        </Button>
       </Form>
     </Modal>
   )

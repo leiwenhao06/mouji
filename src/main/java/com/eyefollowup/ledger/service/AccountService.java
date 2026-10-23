@@ -5,6 +5,7 @@ import com.eyefollowup.ledger.dao.UserDAO;
 import com.eyefollowup.ledger.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -69,6 +70,10 @@ public class AccountService {
         if (!ALLOWED_EXT.contains(ext)) {
             throw new BizException("头像仅支持 jpg / png / webp 格式");
         }
+        byte[] head = readHead(file, 12);
+        if (!hasImageMagic(head, ext)) {
+            throw new BizException("文件内容与图片格式不符，请上传真实图片");
+        }
 
         User user = requireUser(username);
         Path dir = Paths.get(avatarDir).toAbsolutePath().normalize();
@@ -87,6 +92,27 @@ public class AccountService {
         deleteOldAvatar(user.getAvatarPath());
         auditService.log("USER", "UPDATE_AVATAR", "更新头像", null);
         return profile(username);
+    }
+
+    /** 修改密码：校验旧密码，新密码要求 ≥8 位且同时包含字母与数字。 */
+    public void changePassword(String username, String oldPassword, String newPassword) {
+        if (newPassword == null || newPassword.length() < 8 || newPassword.length() > 64) {
+            throw new BizException("新密码长度需为 8-64 位");
+        }
+        boolean hasLetter = newPassword.chars().anyMatch(Character::isLetter);
+        boolean hasDigit = newPassword.chars().anyMatch(Character::isDigit);
+        if (!hasLetter || !hasDigit) {
+            throw new BizException("新密码需同时包含字母和数字");
+        }
+        if (newPassword.equals(oldPassword)) {
+            throw new BizException("新密码不能与原密码相同");
+        }
+        User user = requireUser(username);
+        if (oldPassword == null || !BCrypt.checkpw(oldPassword, user.getPasswordHash())) {
+            throw new BizException(400, "原密码不正确");
+        }
+        userDAO.updatePassword(user.getId(), BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+        auditService.log("USER", "CHANGE_PASSWORD", "修改登录密码", null);
     }
 
     public AvatarFile loadAvatar(String username) {
@@ -109,6 +135,46 @@ public class AccountService {
         } catch (Exception e) {
             throw new BizException(404, "头像文件读取失败");
         }
+    }
+
+    /** 读取文件头部字节，用于魔数校验。 */
+    private byte[] readHead(MultipartFile file, int n) {
+        try (InputStream in = file.getInputStream()) {
+            byte[] buf = new byte[n];
+            int read = 0;
+            while (read < n) {
+                int r = in.read(buf, read, n - read);
+                if (r < 0) {
+                    break;
+                }
+                read += r;
+            }
+            return read == n ? buf : java.util.Arrays.copyOf(buf, read);
+        } catch (Exception e) {
+            throw new BizException("头像文件读取失败");
+        }
+    }
+
+    /**
+     * 魔数校验：JPEG=FF D8 FF，PNG=89 50 4E 47，WebP=RIFF????WEBP。
+     * 防止把可执行文件/脚本改后缀伪装成图片上传。
+     */
+    static boolean hasImageMagic(byte[] head, String ext) {
+        if (head == null || head.length < 4) {
+            return false;
+        }
+        int b0 = head[0] & 0xFF, b1 = head[1] & 0xFF, b2 = head[2] & 0xFF, b3 = head[3] & 0xFF;
+        if (b0 == 0xFF && b1 == 0xD8 && b2 == 0xFF) {
+            return "jpg".equals(ext) || "jpeg".equals(ext);
+        }
+        if (b0 == 0x89 && b1 == 0x50 && b2 == 0x4E && b3 == 0x47) {
+            return "png".equals(ext);
+        }
+        if (b0 == 0x52 && b1 == 0x49 && b2 == 0x46 && b3 == 0x46 && head.length >= 12
+                && head[8] == 'W' && head[9] == 'E' && head[10] == 'B' && head[11] == 'P') {
+            return "webp".equals(ext);
+        }
+        return false;
     }
 
     private void deleteOldAvatar(String oldName) {
