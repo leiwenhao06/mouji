@@ -112,6 +112,15 @@ scripts\start.bat    :: 启动 OCR + 后端并打开浏览器
 scripts\stop.bat     :: 停止服务
 ```
 
+### 3.7 路演前自检
+
+```bat
+set DB_PASSWORD=你的MySQL密码
+.venv\Scripts\python tools\preflight.py
+```
+
+一键检查 MySQL、后端、OCR、前端静态页、管理员登录、看板聚合、CSV 导出与演示数据量；12 项全部通过即可上台，任一项失败会给出具体原因（退出码 1）。
+
 ## 4. 生成演示数据
 
 ```bat
