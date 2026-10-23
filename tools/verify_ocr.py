@@ -65,6 +65,7 @@ def fetch_ground_truth(limit):
             cur.execute(
                 """
                 SELECT mi.image_path, e.exam_date, e.eye_side, p.name AS patient_name,
+                       p.gender, DATE_FORMAT(p.date_of_birth, '%Y-%m-%d') AS date_of_birth,
                        t.front_k1, t.front_k2, t.front_km, t.front_kmax, t.front_rmin,
                        t.back_k1, t.back_k2, t.back_km, t.back_rmin,
                        t.pupil_center_pachy, t.pachy_apex, t.thinnest_pachy,
@@ -139,6 +140,17 @@ def compare_one(truth, result):
     act_name = str((fields.get("patient_name") or {}).get("value") or "").replace(" ", "")
     if exp_name:
         details.append(("patient_name", exp_name, act_name, act_name == exp_name))
+
+    gender_map = {"Male": "Male", "Female": "Female", "男": "Male", "女": "Female"}
+    exp_gender = gender_map.get(str(truth.get("gender") or "").strip())
+    act_gender = gender_map.get(str((fields.get("gender") or {}).get("value") or "").strip())
+    if exp_gender:
+        details.append(("gender", exp_gender, act_gender, act_gender == exp_gender))
+
+    exp_dob = str(truth.get("date_of_birth") or "")
+    act_dob = str((fields.get("date_of_birth") or {}).get("value") or "")
+    if exp_dob:
+        details.append(("date_of_birth", exp_dob, act_dob, act_dob[:10] == exp_dob[:10]))
 
     hits = sum(1 for d in details if d[3])
     return hits, len(details), details

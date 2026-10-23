@@ -105,11 +105,12 @@ def _date(s):
 
 
 def _gender(s):
-    t = _norm_text(s)
-    if re.search(r"男|^m$|male", t, re.I):
-        return "Male"
-    if re.search(r"女|^f$|female", t, re.I):
+    # 注意：female 包含子串 male，必须先判 Female 且 male 用 ^ 锚定，避免误判
+    t = _norm_text(s).strip().lower()
+    if re.search(r"女|^f$|^female", t):
         return "Female"
+    if re.search(r"男|^m$|^male", t):
+        return "Male"
     return None
 
 
