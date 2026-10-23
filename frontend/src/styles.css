@@ -294,6 +294,35 @@ body {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
+.route-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 50vh;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.route-loading-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: route-pulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes route-pulse {
+  from {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
 /* ==================== 统计块 ==================== */
 .stat-tile .ant-card-body {
   display: flex;

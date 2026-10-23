@@ -24,6 +24,7 @@ public class AuthService {
 
     private final UserDAO userDAO;
     private final JwtUtil jwtUtil;
+    private final LoginAttemptLimiter loginAttemptLimiter;
 
     @Value("${app.admin.username:admin}")
     private String adminUsername;
@@ -40,10 +41,19 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest req) {
-        User user = userDAO.findByUsername(req.getUsername().trim());
-        if (user == null || !BCrypt.checkpw(req.getPassword(), user.getPasswordHash())) {
-            throw new BizException(401, "用户名或密码错误");
+        String username = req.getUsername() == null ? "" : req.getUsername().trim();
+        if (loginAttemptLimiter.isLocked(username)) {
+            throw new BizException(429, "登录失败次数过多，请 10 分钟后再试");
         }
+        User user = userDAO.findByUsername(username);
+        if (user == null || !BCrypt.checkpw(req.getPassword(), user.getPasswordHash())) {
+            loginAttemptLimiter.onFailure(username);
+            int left = loginAttemptLimiter.remaining(username);
+            throw new BizException(401, left > 0
+                    ? "用户名或密码错误（还可尝试 " + left + " 次）"
+                    : "登录失败次数过多，请 10 分钟后再试");
+        }
+        loginAttemptLimiter.onSuccess(username);
         String token = jwtUtil.generate(user.getUsername(), user.getRole());
         return new LoginResponse(token, user.getUsername(),
                 user.getDisplayName() == null ? user.getUsername() : user.getDisplayName(),

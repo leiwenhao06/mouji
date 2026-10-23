@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Badge, Button, Dropdown, Layout as AntLayout, Menu, Space, Tag } from 'antd'
 import {
+  AuditOutlined,
   DashboardOutlined,
   FileSearchOutlined,
   LogoutOutlined,
@@ -29,6 +30,7 @@ const TITLES: Record<string, string> = {
   '/suggestions': 'AI 随访建议',
   '/dashboard': '数据看板',
   '/users': '用户管理',
+  '/audit': '审计日志',
 }
 
 export default function Layout() {
@@ -98,6 +100,7 @@ export default function Layout() {
     ]
     if (account.role === 'admin') {
       list.push({ key: '/users', icon: <UserOutlined />, label: '用户管理' })
+      list.push({ key: '/audit', icon: <AuditOutlined />, label: '审计日志' })
     }
     return list
   }, [overdue, account.role])

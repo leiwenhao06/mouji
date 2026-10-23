@@ -50,8 +50,8 @@ public class AuthInterceptor implements HandlerInterceptor {
             request.setAttribute("username", username);
             request.setAttribute("role", role);
 
-            // 用户管理仅管理员可用
-            if (path.startsWith("/api/users") && !"admin".equals(role)) {
+            // 用户管理与审计查询仅管理员可用
+            if ((path.startsWith("/api/users") || path.startsWith("/api/audit")) && !"admin".equals(role)) {
                 return reject(response, 403, "仅管理员可访问");
             }
             return true;
