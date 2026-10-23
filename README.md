@@ -25,6 +25,18 @@
 | 审计追溯 | 管理员可查询全部关键操作（模块/操作人筛选、分页），日志只追加不可改 |
 | 安全与审计 | JWT 登录、接口鉴权、登录失败限流（5 次/10 分钟）、操作审计、报告图片需登录访问 |
 
+## 界面预览
+
+| 登录 | 数据看板 |
+|---|---|
+| <img src="docs/images/01-login.jpg" width="480" alt="登录" /> | <img src="docs/images/02-dashboard.jpg" width="480" alt="看板" /> |
+| **患者台账** | **报告 OCR 导入** |
+| <img src="docs/images/03-patient-ledger.jpg" width="480" alt="患者台账" /> | <img src="docs/images/04-import-ocr.jpg" width="480" alt="报告导入" /> |
+| **AI 随访建议** | **随访计划** |
+| <img src="docs/images/05-ai-suggestion.jpg" width="480" alt="AI 随访建议" /> | <img src="docs/images/06-followup-plan.jpg" width="480" alt="随访计划" /> |
+
+> 截图中的患者姓名、电话均为程序生成的模拟数据。
+
 ## 2. 技术架构
 
 ```
@@ -46,7 +58,7 @@ MySQL 8 ── eye_followup_ledger（10 张表）
 设计要点：
 - **双引擎可降级**：大模型不可用/超时/输出不合法时，直接使用同一输出契约的循证规则草稿，功能不中断。
 - **指南一致性守卫**：大模型只能补充个体化内容，不能删减规则草稿中的随访频率、复查项目与急症提示。
-- **隐私红线**：Agent 上下文只含性别/年龄/眼别/检查指标；报告图片接口必须登录；无任何硬编码密码。
+- **隐私红线**：Agent 上下文只含性别/年龄/眼别/检查指标；报告图片接口必须登录；数据库密码与 JWT 密钥均走环境变量，管理员初始口令可用 `ADMIN_PASSWORD` 覆盖（默认值仅用于演示）。
 
 ## 3. 快速开始
 
