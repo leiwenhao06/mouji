@@ -108,9 +108,11 @@ npm run build
 ### 3.6 一键启动（Windows）
 
 ```bat
-scripts\start.bat    :: 启动 OCR + 后端并打开浏览器
+scripts\start.bat    :: 首次运行自动构建前端/后端；启动 OCR + 后端并打开浏览器
 scripts\stop.bat     :: 停止服务
 ```
+
+> 全新克隆仓库后直接运行 `start.bat` 即可：缺少前端产物时会自动执行 `npm install && npm run build`（需 Node.js 18+），缺少 jar 时会自动 `mvn package`（需 JDK 17）。OCR 依赖 `.venv`，按 3.4 节创建；未创建时导入功能降级为手动录入，其余功能可用。
 
 ### 3.7 路演前自检
 
