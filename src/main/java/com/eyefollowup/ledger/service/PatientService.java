@@ -53,7 +53,8 @@ public class PatientService {
         p.setContact(req.getContact());
         p.setMedicalHistory(req.getMedicalHistory());
         patientDAO.insert(p);
-        auditService.log("PATIENT", "CREATE", "新建患者 " + p.getName(), p.getPatientId());
+        // 审计只记录患者 ID，不写入姓名等直接标识
+        auditService.log("PATIENT", "CREATE", "新建患者档案", p.getPatientId());
         return p;
     }
 
@@ -66,7 +67,7 @@ public class PatientService {
         p.setContact(req.getContact());
         p.setMedicalHistory(req.getMedicalHistory());
         patientDAO.update(p);
-        auditService.log("PATIENT", "UPDATE", "编辑患者 " + p.getName(), patientId);
+        auditService.log("PATIENT", "UPDATE", "编辑患者档案", patientId);
         return p;
     }
 

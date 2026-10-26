@@ -21,8 +21,16 @@ public class AuditDAO {
     public void insert(String username, String module, String action, String detail, String patientId, String ip) {
         jdbc.update("INSERT INTO audit_logs (username, module, action, detail, patient_id, ip) VALUES (?,?,?,?,?,?)",
                 username == null ? "anonymous" : username, module, action,
-                detail == null ? null : (detail.length() > 500 ? detail.substring(0, 500) : detail),
-                patientId, ip);
+                sanitize(detail, 500), patientId, ip);
+    }
+
+    /** 去除换行等控制字符，防止伪造多行审计记录。 */
+    private static String sanitize(String detail, int maxLen) {
+        if (detail == null) {
+            return null;
+        }
+        String s = detail.replaceAll("[\\r\\n\\t]", " ");
+        return s.length() > maxLen ? s.substring(0, maxLen) : s;
     }
 
     /** 条件片段与参数一一对应，全部走占位符绑定，杜绝拼接注入。 */

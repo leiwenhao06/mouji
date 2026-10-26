@@ -5,6 +5,7 @@ import com.eyefollowup.ledger.common.BizException;
 import com.eyefollowup.ledger.dao.ImageDAO;
 import com.eyefollowup.ledger.entity.MedicalImage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,9 @@ public class ImageController {
 
     private final ImageDAO imageDAO;
 
+    @Value("${app.storage.image-dir:./data/images}")
+    private String imageDir;
+
     @GetMapping("/{imageId}")
     public ResponseEntity<byte[]> get(@PathVariable int imageId) {
         MedicalImage image = imageDAO.findById(imageId);
@@ -31,11 +35,19 @@ public class ImageController {
             throw new BizException(404, "影像不存在");
         }
         try {
-            Path path = Paths.get(image.getImagePath()).toAbsolutePath().normalize();
+            // 仅允许读取影像目录下的文件，避免数据库路径被篡改后读取任意文件
+            Path base = Paths.get(imageDir).toAbsolutePath().normalize();
+            String fileName = Paths.get(image.getImagePath()).getFileName().toString();
+            Path path = base.resolve(fileName).normalize();
+            if (!path.startsWith(base) || !Files.exists(path)) {
+                throw new BizException(404, "影像文件不存在");
+            }
             byte[] bytes = Files.readAllBytes(path);
-            String lower = image.getImagePath().toLowerCase();
+            String lower = fileName.toLowerCase();
             MediaType type = lower.endsWith(".png") ? MediaType.IMAGE_PNG : MediaType.IMAGE_JPEG;
             return ResponseEntity.ok().contentType(type).body(bytes);
+        } catch (BizException e) {
+            throw e;
         } catch (Exception e) {
             throw new BizException(404, "影像文件不存在");
         }

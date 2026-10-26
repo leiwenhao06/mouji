@@ -98,9 +98,12 @@ export default function Users() {
           <Form.Item
             name="password"
             label="初始密码"
-            rules={[{ required: true, min: 6, message: '至少 6 位' }]}
+            rules={[
+              { required: true, message: '请输入初始密码' },
+              { pattern: /^(?=.*[A-Za-z])(?=.*\d).{8,64}$/, message: '8-64 位，需同时包含字母和数字' },
+            ]}
           >
-            <Input.Password />
+            <Input.Password placeholder="8-64 位，包含字母和数字" />
           </Form.Item>
           <Form.Item name="displayName" label="显示名称">
             <Input />
@@ -124,8 +127,15 @@ export default function Users() {
         destroyOnClose
       >
         <Form form={pwdForm} layout="vertical" style={{ marginTop: 12 }}>
-          <Form.Item name="password" label="新密码" rules={[{ required: true, min: 6, message: '至少 6 位' }]}>
-            <Input.Password />
+          <Form.Item
+            name="password"
+            label="新密码"
+            rules={[
+              { required: true, message: '请输入新密码' },
+              { pattern: /^(?=.*[A-Za-z])(?=.*\d).{8,64}$/, message: '8-64 位，需同时包含字母和数字' },
+            ]}
+          >
+            <Input.Password placeholder="8-64 位，包含字母和数字" />
           </Form.Item>
         </Form>
       </Modal>

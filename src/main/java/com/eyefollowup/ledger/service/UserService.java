@@ -1,6 +1,7 @@
 package com.eyefollowup.ledger.service;
 
 import com.eyefollowup.ledger.common.BizException;
+import com.eyefollowup.ledger.common.PasswordPolicy;
 import com.eyefollowup.ledger.dao.UserDAO;
 import com.eyefollowup.ledger.dto.UserCreateRequest;
 import com.eyefollowup.ledger.entity.User;
@@ -30,6 +31,7 @@ public class UserService {
         if (userDAO.findByUsername(req.getUsername().trim()) != null) {
             throw new BizException("用户名已存在");
         }
+        PasswordPolicy.validate(req.getPassword());
         String role = "admin".equals(req.getRole()) ? "admin" : "user";
         userDAO.insert(req.getUsername().trim(),
                 BCrypt.hashpw(req.getPassword(), BCrypt.gensalt()),
@@ -40,9 +42,7 @@ public class UserService {
     }
 
     public void resetPassword(int id, String newPassword) {
-        if (newPassword == null || newPassword.length() < 6) {
-            throw new BizException("密码至少 6 位");
-        }
+        PasswordPolicy.validate(newPassword);
         userDAO.updatePassword(id, BCrypt.hashpw(newPassword, BCrypt.gensalt()));
         auditService.log("USER", "RESET_PASSWORD", "重置用户 #" + id + " 密码", null);
     }

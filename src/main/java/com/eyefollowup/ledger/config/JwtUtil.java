@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +16,7 @@ import java.util.Date;
 /**
  * JWT 签发与校验工具（HS256）。
  */
+@Slf4j
 @Component
 public class JwtUtil {
 
@@ -32,6 +34,10 @@ public class JwtUtil {
         byte[] bytes = secret.getBytes(StandardCharsets.UTF_8);
         if (bytes.length < 32) {
             throw new IllegalStateException("app.jwt.secret 长度必须不少于 32 字节");
+        }
+        String envSecret = System.getenv("JWT_SECRET");
+        if (envSecret == null || envSecret.isBlank()) {
+            log.warn("未设置 JWT_SECRET，正在使用默认演示密钥；生产环境必须通过环境变量覆盖（至少 32 字符）");
         }
         this.key = Keys.hmacShaKeyFor(bytes);
     }

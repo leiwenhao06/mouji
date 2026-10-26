@@ -70,6 +70,9 @@ public class ImportService {
         if (!ALLOWED_EXT.contains(ext)) {
             throw new BizException("仅支持 jpg/jpeg/png/bmp 格式的报告图片");
         }
+        if (!looksLikeImage(file, ext)) {
+            throw new BizException("文件内容与图片格式不符，请上传真实的报告图片");
+        }
 
         Path dir = Paths.get(imageDir).toAbsolutePath().normalize();
         String storedName = UUID.randomUUID().toString().replace("-", "") + "." + ext;
@@ -196,6 +199,25 @@ public class ImportService {
         result.put("riskFlag", exam.getRiskFlag());
         result.put("stageCode", exam.getStageCode());
         return result;
+    }
+
+    /** 魔数校验：JPEG=FF D8 FF，PNG=89 50 4E 47，BMP=BM，防止改后缀伪装上传。 */
+    private boolean looksLikeImage(MultipartFile file, String ext) {
+        try (InputStream in = file.getInputStream()) {
+            byte[] h = in.readNBytes(4);
+            int b0 = h.length > 0 ? h[0] & 0xFF : -1;
+            int b1 = h.length > 1 ? h[1] & 0xFF : -1;
+            int b2 = h.length > 2 ? h[2] & 0xFF : -1;
+            int b3 = h.length > 3 ? h[3] & 0xFF : -1;
+            return switch (ext) {
+                case "jpg", "jpeg" -> b0 == 0xFF && b1 == 0xD8 && b2 == 0xFF;
+                case "png" -> b0 == 0x89 && b1 == 0x50 && b2 == 0x4E && b3 == 0x47;
+                case "bmp" -> b0 == 0x42 && b1 == 0x4D;
+                default -> false;
+            };
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     // ---------------- OCR 字段映射 ----------------

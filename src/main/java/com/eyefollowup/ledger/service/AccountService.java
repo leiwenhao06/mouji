@@ -1,6 +1,7 @@
 package com.eyefollowup.ledger.service;
 
 import com.eyefollowup.ledger.common.BizException;
+import com.eyefollowup.ledger.common.PasswordPolicy;
 import com.eyefollowup.ledger.dao.UserDAO;
 import com.eyefollowup.ledger.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -96,14 +97,7 @@ public class AccountService {
 
     /** 修改密码：校验旧密码，新密码要求 ≥8 位且同时包含字母与数字。 */
     public void changePassword(String username, String oldPassword, String newPassword) {
-        if (newPassword == null || newPassword.length() < 8 || newPassword.length() > 64) {
-            throw new BizException("新密码长度需为 8-64 位");
-        }
-        boolean hasLetter = newPassword.chars().anyMatch(Character::isLetter);
-        boolean hasDigit = newPassword.chars().anyMatch(Character::isDigit);
-        if (!hasLetter || !hasDigit) {
-            throw new BizException("新密码需同时包含字母和数字");
-        }
+        PasswordPolicy.validate(newPassword);
         if (newPassword.equals(oldPassword)) {
             throw new BizException("新密码不能与原密码相同");
         }
