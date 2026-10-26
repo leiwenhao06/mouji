@@ -25,18 +25,6 @@
 | 审计追溯 | 管理员可查询全部关键操作（模块/操作人筛选、分页），日志只追加不可改 |
 | 安全与审计 | JWT 登录、接口鉴权、登录失败限流（5 次/10 分钟）、操作审计、报告图片需登录访问 |
 
-## 界面预览
-
-| 登录 | 数据看板 |
-|---|---|
-| <img src="docs/images/01-login.jpg" width="480" alt="登录" /> | <img src="docs/images/02-dashboard.jpg" width="480" alt="看板" /> |
-| **患者台账** | **报告 OCR 导入** |
-| <img src="docs/images/03-patient-ledger.jpg" width="480" alt="患者台账" /> | <img src="docs/images/04-import-ocr.jpg" width="480" alt="报告导入" /> |
-| **AI 随访建议** | **随访计划** |
-| <img src="docs/images/05-ai-suggestion.jpg" width="480" alt="AI 随访建议" /> | <img src="docs/images/06-followup-plan.jpg" width="480" alt="随访计划" /> |
-
-> 截图中的患者姓名、电话均为程序生成的模拟数据。
-
 ## 2. 技术架构
 
 ```
@@ -150,18 +138,36 @@ set DB_PASSWORD=你的MySQL密码
 
 当前基线（2026-10-23，60 张图）：**1200/1200 字段一致，整体准确率 100%**。若替换为真实设备报告，可用同样的方式补充样本与真值 CSV 做验收。
 
-## 5. 可选：接入本地大模型
+## 5. 可选：接入大模型（API Key 通过环境变量注入）
 
-安装 [Ollama](https://ollama.com/) 并拉取模型后启动：
+支持任意 OpenAI 兼容接口（DeepSeek、通义 DashScope 兼容模式、Moonshot、硅基流动、本地 Ollama 等）。
+在启动服务的同一个命令行窗口设置环境变量（变量会被 `start.bat` 启动的子进程继承）：
 
 ```bat
-ollama pull qwen3:4b
 set LLM_ENABLED=true
-java -jar target\eye-followup-ledger.jar
+set LLM_API_KEY=你的API密钥
+set LLM_BASE_URL=https://api.deepseek.com/v1
+set LLM_MODEL=deepseek-chat
+scripts\start.bat
 ```
-- 默认 `LLM_ENABLED=false`，即纯规则引擎（约 2~3 秒出结果）。
-- 接入后建议配 8GB 显存；CPU 推理会明显变慢。
-- 关键配置：`think=false`（推理模型关闭思维链，否则可能返回空内容）、`num_ctx=8192`。
+
+通用配置项：
+
+| 环境变量 | 说明 | 默认值 |
+|---|---|---|
+| `LLM_ENABLED` | 是否启用大模型（关闭时纯规则引擎，约 20ms） | `false` |
+| `LLM_API_KEY` | 供应方密钥，**仅环境变量注入，不落盘** | 空 |
+| `LLM_BASE_URL` | OpenAI 兼容根地址（以 `/v1` 结尾） | `https://api.deepseek.com/v1` |
+| `LLM_MODEL` | 模型名 | `deepseek-chat` |
+| `LLM_TIMEOUT_MS` | 调用超时 | `60000` |
+
+**密钥安全约定**
+- 密钥只存在于启动进程的环境变量中，不写入代码、`application.yml`、bat 脚本或任何仓库文件（`.gitignore` 已排除 `.env*`）。
+- 服务端日志仅打印“密钥已配置/未配置”；调用异常信息会将密钥替换为 `****` 后再记录。
+- 演示结束后请到供应方控制台吊销或轮换该密钥。
+- 未配置密钥、调用超时或返回内容不合法时，自动降级为规则草稿，功能不中断。
+
+本地 Ollama：设置 `LLM_BASE_URL=http://127.0.0.1:11434/v1`、`LLM_MODEL=qwen3:4b`，无需 `LLM_API_KEY`。
 
 ## 6. 目录结构
 
@@ -177,8 +183,7 @@ mouji/
 ├─ ocr_service/    Python OCR 服务（Flask + RapidOCR）
 ├─ tools/          模拟数据生成器
 ├─ sql/            建库脚本
-├─ scripts/        一键启动/停止
-└─ docs/           方案与迭代记录
+└─ scripts/        一键启动/停止
 ```
 
 ## 7. 主要接口
