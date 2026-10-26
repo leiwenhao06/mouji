@@ -42,6 +42,7 @@ Thumbs.db
 
 # ===== 本地资料（方案、PPT、提交文案，不随仓库分发） =====
 docs/
+Description.md
 
 # ===== 临时文件 =====
 .tmp/
