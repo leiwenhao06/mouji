@@ -36,7 +36,6 @@ config/application-local.properties
 *.iml
 *.ipr
 *.iws
-.claude/
 .DS_Store
 Thumbs.db
 
